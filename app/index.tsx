@@ -13,10 +13,14 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const App: React.FC = () => {
   return (
-      <Stack.Navigator initialRouteName="Input">
-        <Stack.Screen name="Input" component={InputScreen} />
-        <Stack.Screen name="Recipe" component={RecipeScreen} />
-      </Stack.Navigator>
+    <Stack.Navigator initialRouteName="Input">
+      <Stack.Screen
+        name="Input"
+        component={InputScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen name="Recipe" component={RecipeScreen} />
+    </Stack.Navigator>
   );
 };
 

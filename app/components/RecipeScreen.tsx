@@ -1,21 +1,47 @@
 import React, { useState } from "react";
 import { View, Text, Button, StyleSheet, Modal, FlatList } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import * as Speech from "expo-speech";
 import { RootStackParamList } from "..";
 
 type RecipeScreenProps = NativeStackScreenProps<RootStackParamList, "Recipe">;
 
 const RecipeScreen: React.FC<RecipeScreenProps> = ({ route, navigation }) => {
   const { recipe } = route.params;
-  const [currentStep, setCurrentStep] = useState<number>(0);
-  const [ingredientsVisible, setIngredientsVisible] = useState<boolean>(false);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [ingredientsVisible, setIngredientsVisible] = useState(false);
+  const [audioMode, setAudioMode] = useState(false);
 
   const nextStep = () => {
-    if (currentStep < recipe.steps.length - 1) setCurrentStep(currentStep + 1);
+    if (currentStep < recipe.steps.length - 1) {
+      if (audioMode) {
+        speakStep(currentStep + 1);
+      }
+      setCurrentStep(currentStep + 1);
+    }
   };
 
   const prevStep = () => {
-    if (currentStep > 0) setCurrentStep(currentStep - 1);
+    if (currentStep > 0) {
+      if (audioMode) {
+        speakStep(currentStep - 1);
+      }
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const toggleAudioMode = () => {
+    const newAudioMode = !audioMode;
+    setAudioMode(newAudioMode);
+
+    if (newAudioMode) {
+      speakStep(currentStep);
+    }
+  };
+
+  const speakStep = (step: number) => {
+    Speech.stop();
+    Speech.speak(recipe.steps[step]);
   };
 
   return (
@@ -39,6 +65,10 @@ const RecipeScreen: React.FC<RecipeScreenProps> = ({ route, navigation }) => {
         />
       </View>
       <Button title="Restart" onPress={() => navigation.navigate("Input")} />
+      <Button
+        title={audioMode ? "Disable Audio Mode" : "Enable Audio Mode"}
+        onPress={toggleAudioMode}
+      />
 
       <Modal visible={ingredientsVisible} animationType="slide">
         <View style={styles.modal}>

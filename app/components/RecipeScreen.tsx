@@ -1,8 +1,15 @@
 import React, { useState } from "react";
 import { View, Text, Button, StyleSheet, Modal, FlatList } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback } from "react";
 import * as Speech from "expo-speech";
+import { Audio } from "expo-av";
 import { RootStackParamList } from "..";
+
+/*
+ * TODO:
+ */
 
 type RecipeScreenProps = NativeStackScreenProps<RootStackParamList, "Recipe">;
 
@@ -30,12 +37,23 @@ const RecipeScreen: React.FC<RecipeScreenProps> = ({ route, navigation }) => {
     }
   };
 
-  const toggleAudioMode = () => {
+  const toggleAudioMode = async () => {
     const newAudioMode = !audioMode;
     setAudioMode(newAudioMode);
 
     if (newAudioMode) {
+      // Configure audio settings to play even if ringer mode is off
+      await Audio.setAudioModeAsync({
+        playsInSilentModeIOS: true, // Enable playback in silent mode
+        staysActiveInBackground: false,
+        shouldDuckAndroid: true,
+      });
       speakStep(currentStep);
+    } else {
+      // Reset audio mode
+      await Audio.setAudioModeAsync({
+        playsInSilentModeIOS: false,
+      });
     }
   };
 
@@ -43,6 +61,15 @@ const RecipeScreen: React.FC<RecipeScreenProps> = ({ route, navigation }) => {
     Speech.stop();
     Speech.speak(recipe.steps[step]);
   };
+
+  // Stop audio when screen loses focus
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        Speech.stop();
+      };
+    }, [])
+  );
 
   return (
     <View style={styles.container}>

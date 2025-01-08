@@ -32,6 +32,9 @@ yarn-error.*
 # local env files
 .env*.local
 
+# Ignore API key file
+api-key.txt
+
 # typescript
 *.tsbuildinfo
 

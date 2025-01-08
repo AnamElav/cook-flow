@@ -30,7 +30,7 @@ const InputScreen: React.FC<InputScreenProps> = ({ navigation }) => {
         body: JSON.stringify({ url }),
       });
 
-    //   console.log("Response received:", response);
+      //   console.log("Response received:", response);
 
       const data = await response.json();
       setLoading(false);

@@ -2,9 +2,12 @@ import React, { useState } from "react";
 import { View, Text, Button, StyleSheet, Modal, FlatList } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useFocusEffect } from "@react-navigation/native";
+import { useEffect } from "react";
 import { useCallback } from "react";
 import * as Speech from "expo-speech";
 import { Audio } from "expo-av";
+// import Voice from "@react-native-voice/voice";
+import { summarizeStep } from "../utils/summarizeStep";
 import { RootStackParamList } from "..";
 
 /*
@@ -16,11 +19,70 @@ type RecipeScreenProps = NativeStackScreenProps<RootStackParamList, "Recipe">;
 const RecipeScreen: React.FC<RecipeScreenProps> = ({ route, navigation }) => {
   const { recipe } = route.params;
   const [currentStep, setCurrentStep] = useState(0);
+  const [simplifiedSteps, setSimplifiedSteps] = useState<string[]>([]);
   const [ingredientsVisible, setIngredientsVisible] = useState(false);
   const [audioMode, setAudioMode] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+
+  // useEffect(() => {
+  //   Voice.onSpeechResults = onSpeechResults;
+  //   Voice.onSpeechError = onSpeechError;
+
+  //   return () => {
+  //     Voice.destroy().then(Voice.removeAllListeners);
+  //   };
+  // }, []);
+
+  // const startListening = async () => {
+  //   try {
+  //     await Voice.start("en-US");
+  //     setIsListening(true);
+  //   } catch (e) {
+  //     console.error(e);
+  //   }
+  // };
+
+  // const stopListening = async () => {
+  //   try {
+  //     await Voice.stop();
+  //     setIsListening(false);
+  //   } catch (e) {
+  //     console.error(e);
+  //   }
+  // };
+
+  // const onSpeechResults = (event: any) => {
+  //   const spokenWords = event.value[0].toLowerCase(); // First recognized word/phrase
+  //   if (spokenWords.includes("next")) {
+  //     nextStep();
+  //   } else if (spokenWords.includes("previous")) {
+  //     prevStep();
+  //   }
+  // };
+
+  // const onSpeechError = (event: any) => {
+  //   console.error("Speech error:", event.error);
+  // };
+
+  useEffect(() => {
+    const processSteps = async () => {
+      try {
+        // Summarize each step using OpenAI
+        const summarized = await Promise.all(
+          recipe.steps.map((step) => summarizeStep(step, recipe.ingredients))
+        );
+        setSimplifiedSteps(summarized);
+      } catch (error) {
+        console.error("Error processing steps:", error);
+        setSimplifiedSteps(recipe.steps); // Fallback to original steps
+      }
+    };
+
+    processSteps();
+  }, [recipe.steps, recipe.ingredients]);
 
   const nextStep = () => {
-    if (currentStep < recipe.steps.length - 1) {
+    if (currentStep < simplifiedSteps.length - 1) {
       if (audioMode) {
         speakStep(currentStep + 1);
       }
@@ -78,7 +140,11 @@ const RecipeScreen: React.FC<RecipeScreenProps> = ({ route, navigation }) => {
         title="Show Ingredients"
         onPress={() => setIngredientsVisible(true)}
       />
-      <Text style={styles.step}>{recipe.steps[currentStep]}</Text>
+      <Text style={styles.step}>
+        {simplifiedSteps.length > 0
+          ? simplifiedSteps[currentStep]
+          : "Loading..."}
+      </Text>
       <View style={styles.buttonContainer}>
         <Button
           title="Previous"
@@ -88,7 +154,7 @@ const RecipeScreen: React.FC<RecipeScreenProps> = ({ route, navigation }) => {
         <Button
           title="Next"
           onPress={nextStep}
-          disabled={currentStep === recipe.steps.length - 1}
+          disabled={currentStep === simplifiedSteps.length - 1}
         />
       </View>
       <Button title="Restart" onPress={() => navigation.navigate("Input")} />
@@ -96,7 +162,10 @@ const RecipeScreen: React.FC<RecipeScreenProps> = ({ route, navigation }) => {
         title={audioMode ? "Disable Audio Mode" : "Enable Audio Mode"}
         onPress={toggleAudioMode}
       />
-
+      <Button
+        title="Start Voice Commands"
+        // onPress={isListening ? stopListening : startListening}
+      />
       <Modal visible={ingredientsVisible} animationType="slide">
         <View style={styles.modal}>
           <Text style={styles.title}>Ingredients</Text>

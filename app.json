@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "CookingAR",
-    "slug": "CookingAR",
+    "name": "CookFlow",
+    "slug": "CookFlow",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -9,7 +9,10 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "We need access to your microphone for voice commands."
+      }
     },
     "android": {
       "adaptiveIcon": {
